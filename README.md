@@ -198,6 +198,15 @@ yarn install
 yarn dev
 ```
 
+Note: if you get errors like below for `yarn dev`, try using the image postgres:12-bullseye for the db service
+
+```
+db_1           | popen failure: Cannot allocate memory
+db_1           | initdb: error: The program "postgres" is needed by initdb but was not found in the
+db_1           | same directory as "/usr/lib/postgresql/12/bin/initdb".
+db_1           | Check your installation.
+```
+
 Run end-to end Cypress tests against the server you just started:
 
 -   `yarn test-e2e:dev` to run once
