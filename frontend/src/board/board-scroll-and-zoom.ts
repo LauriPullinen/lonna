@@ -24,6 +24,20 @@ export function boardScrollAndZoomHandler(
     coordinateHelper: BoardCoordinateHelper,
     toolController: ToolController,
 ) {
+    const initialPos = L.combine(scrollElement, board, (se, board) => {
+        if (se) {
+            const viewport = se.getBoundingClientRect()
+            const width = coordinateHelper.emToPagePx(board.width)
+            const height = coordinateHelper.emToPagePx(board.height)
+            return {
+                x: width / 2 - viewport.width / 2,
+                y: height / 2 - viewport.height / 2,
+            }
+        } else {
+            return null
+        }
+    })
+
     const scrollPos = scrollElement.pipe(
         L.changes,
         L.filter(nonNull),
@@ -42,20 +56,18 @@ export function boardScrollAndZoomHandler(
         (id) => "scrollAndZoom." + id,
     )
 
-    L.view(scrollElement, localStorageKey, (el, key) => ({ el, key }))
+    L.view(scrollElement, initialPos, localStorageKey, (el, ip, key) => ({ el, ip, key }))
         .pipe(L.applyScope(componentScope()))
-        .forEach(({ el, key }) => {
-            if (el) {
+        .forEach(({ el, ip, key }) => {
+            if (el && ip) {
                 const storedScrollAndZoom = localStorage[key]
-                if (storedScrollAndZoom) {
-                    //console.log("Init position for board", key)
-                    const parsed = JSON.parse(storedScrollAndZoom)
-                    setTimeout(() => {
-                        el.scrollTop = parsed.y
-                        el.scrollLeft = parsed.x
-                        zoom.set({ zoom: parsed.zoom, quickZoom: 1 })
-                    }, 0) // Need to wait for first render to have correct size. Causes a little flicker.
-                }
+                const scrollAndZoom = storedScrollAndZoom ? JSON.parse(storedScrollAndZoom) : { ...ip, zoom: 1 }
+                //console.log("Init position for board", key, scrollAndZoom)
+                setTimeout(() => {
+                    el.scrollTop = scrollAndZoom.y
+                    el.scrollLeft = scrollAndZoom.x
+                    zoom.set({ zoom: scrollAndZoom.zoom, quickZoom: 1 })
+                }, 0) // Need to wait for first render to have correct size. Causes a little flicker.
             }
         })
 
